@@ -405,12 +405,23 @@ describe ByteBuffer do
   end
 
   describe "position=" do
-    it "sets the position to the given offset" do
+    it "sets the position to the given index" do
       bb = ByteBuffer.new(byte_slice 0, 0, 0, 0, 0, 0)
       bb.position = 1
       bb.write 1234567890
       slice = byte_slice(0, 210, 2, 150, 73, 0)
       bb.to_slice.should eq(slice)
+    end
+
+    it "raises if the given index is greater than capacity" do
+      bb = ByteBuffer.new(3)
+      expect_raises { bb.position = 4 }
+    end
+
+    it "raises if the given index is greater than limit" do
+      bb = ByteBuffer.new(3)
+      bb.limit = 2
+      expect_raises { bb.position = 3 }
     end
   end
 

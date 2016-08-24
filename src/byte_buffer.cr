@@ -255,12 +255,3 @@ class ByteBuffer
     end
   end
 end
-
-class Object
-  def my_tap
-    with self yield
-    self
-  end
-end
-
-p ByteBuffer.new(16).my_tap { 4.times { write(rand 9999) } }

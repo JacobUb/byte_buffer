@@ -100,7 +100,7 @@ bb.order # => IO::ByteOrder::LittleEndian
 bb.order = IO::ByteOrder::BigEndian
 ```
 
-More information on the [wiki](#)
+More information on the [wiki](https://github.com/Exilor/byte_buffer/wiki)
 
 ## Contributing
 

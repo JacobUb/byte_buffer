@@ -1,6 +1,6 @@
-# ByteBuffer
+# ByteBuffer [![Build Status](https://travis-ci.org/Exilor/byte_buffer.svg?branch=master)](https://travis-ci.org/Exilor/byte_buffer)
 
-An IO object superficially similar to Crystal's [MemoryIO](https://crystal-lang.org/api/MemoryIO.html) but meant to behave more like Java's nio.ByteBuffer.
+An IO object inspired by Java's nio.ByteBuffer.
 
 ## Installation
 
@@ -100,7 +100,7 @@ bb.order # => IO::ByteOrder::LittleEndian
 bb.order = IO::ByteOrder::BigEndian
 ```
 
-More information on the [wiki]
+More information on the [wiki](#)
 
 ## Contributing
 

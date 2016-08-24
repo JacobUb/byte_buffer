@@ -96,8 +96,8 @@ bb.read # => end of file reached (IO::EOFError)
 **Changing the byte order**
 ```crystal
 bb = ByteBuffer.new(1)
-bb.order # => IO::ByteOrder::LittleEndian
-bb.order = IO::ByteOrder::BigEndian
+bb.order # => IO::ByteFormat::LittleEndian
+bb.order = IO::ByteFormat::BigEndian
 ```
 
 More information on the [wiki](https://github.com/Exilor/byte_buffer/wiki)

@@ -215,8 +215,10 @@ class ByteBuffer
     # Sets the position to the given index. Raises if the index is greater than
     # the capacity or the limit.
     def position=(index : Int)
-      if index > @capacity || index > @limit
+      if index > @capacity
         raise ArgumentError.new("position cannot be greater than the capacity")
+      elsif index > @limit
+        raise ArgumentError.new("position cannot be greater than the limit")
       elsif index < 0
         raise ArgumentError.new("position must be greater than zero")
       end

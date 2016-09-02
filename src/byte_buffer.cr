@@ -56,13 +56,16 @@ class ByteBuffer
   # To be called implicitly by IO#write_bytes.
   def to_io(io : IO, format : IO::ByteFormat = @order)
     io.write slice = Slice.new(@buffer + @position, remaining)
-    @position += slice.size
+    size = slice.size
+    @position += size
+    size
   end
 
   # To be called implicitly by IO#read_bytes.
   def from_io(io : IO, format : IO::ByteFormat = @order)
     size = io.read Slice.new(@buffer + @position, remaining)
     @position += size
+    size
   end
 
   # See IO#write_bytes.

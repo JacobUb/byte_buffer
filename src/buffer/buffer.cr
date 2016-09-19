@@ -310,7 +310,7 @@ class ByteBuffer
     def clone : self
       bb = self.class.new(@capacity)
       bb.write to_slice
-      bb.position, bb.limit, bb.markm bb.order = @position, @limit, @mark, @order
+      bb.position, bb.limit, bb.mark, bb.order = @position, @limit, @mark, @order
       bb
     end
 

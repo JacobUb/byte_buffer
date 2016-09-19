@@ -296,20 +296,21 @@ class ByteBuffer
     end
 
     # Creates a copy with the same `position`, `limit`, `mark` and `order`.
-    # The copy contains the same data as the original but doesn't share its
-    # memory.
+    # The copy contains the same data as the original and any changes to it will
+    # be reflected on the original.
     def dup : self
       bb = self.class.new(to_slice)
-      bb.position, bb.limit, bb.mark = @position, @limit, @mark
+      bb.position, bb.limit, bb.mark, bb.order = @position, @limit, @mark, @order
       bb
     end
 
     # Creates a copy with the same `position`, `limit`, `mark` and `order`.
-    # They share the same underlying memory.
+    # The copy contains the same data as the original but changes to it won't
+    # be reflected on the original.
     def clone : self
       bb = self.class.new(@capacity)
       bb.write to_slice
-      bb.position, bb.limit, bb.mark = @position, @limit, @mark
+      bb.position, bb.limit, bb.markm bb.order = @position, @limit, @mark, @order
       bb
     end
 

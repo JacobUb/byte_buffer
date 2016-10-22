@@ -218,7 +218,7 @@ class ByteBuffer
   # Yields each byte from the current position to the limit. Position will
   # advance on each successive value yielded to the block.
   def each(&block : UInt8 -> _) : self
-    each.each { |byte| yield byte }
+    each(UInt8) { |byte| yield byte }
     self
   end
 

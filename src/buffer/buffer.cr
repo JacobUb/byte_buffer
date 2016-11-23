@@ -325,5 +325,26 @@ class ByteBuffer
       buf = (@buffer + index).as(UInt8*)
       @order.encode value, PointerIO.new(pointerof(buf))
     end
+
+    private struct PointerIO
+      include IO
+
+      def initialize(@pointer : UInt8**)
+      end
+
+      def read(slice : Slice(UInt8))
+        count = slice.size
+        slice.copy_from(@pointer.value, count)
+        @pointer.value += count
+        count
+      end
+
+      def write(slice : Slice(UInt8))
+        count = slice.size
+        slice.copy_to(@pointer.value, count)
+        @pointer.value += count
+        nil
+      end
+    end
   end
 end

@@ -50,9 +50,10 @@ class ByteBuffer
     def read(slice : Slice(T))
       size = {slice.size, remaining}.min
       if size > 0
-        @position += size.times do |i|
+        size.times do |i|
           slice.to_unsafe[i] = absolute_read @position + i, T
         end
+        @position += size
       end
       size
     end
@@ -82,9 +83,10 @@ class ByteBuffer
     def write(slice : Slice(T))
       size = slice.size
       raise IO::Error.new "buffer is full" if remaining < size
-      @position += size.times do |i|
+      size.times do |i|
         absolute_write @position + i, slice.unsafe_at i
       end
+      @position += size
     end
 
     # Writes the contents of the array into the buffer. Raises IO::Error if
@@ -92,9 +94,10 @@ class ByteBuffer
     def write(array : Array(T))
       size = array.size
       raise IO::Error.new "buffer is full" if remaining < size
-      @position += size.times do |i|
+      size.times do |i|
         absolute_write @position + i, array.unsafe_at i
       end
+      @position += size
     end
 
     # Writes a T value at the given index. Raises IndexError if the index is out

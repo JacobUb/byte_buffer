@@ -400,7 +400,7 @@ describe ByteBuffer do
       bb = ByteBuffer.new(slice)
       bb.limit = 3
       bb.read(Int16)
-      expect_raises(IO::EOFError, "end of file reached") { bb.read(Int16) }
+      expect_raises(IO::EOFError, "End of file reached") { bb.read(Int16) }
     end
   end
 
@@ -749,14 +749,14 @@ describe ByteBuffer do
       bb = ByteBuffer.new(3)
       iter = bb.each
       3.times { iter.next!.should be_a(UInt8) }
-      expect_raises(IO::EOFError, "end of file reached") { iter.next! }
+      expect_raises(IO::EOFError, "End of file reached") { iter.next! }
     end
 
     it "its next! method raises when there's no data left to read(2)" do
       bb = ByteBuffer.new(8 * 3)
       iter = bb.each(Int64)
       3.times { iter.next!.should be_a(Int64) }
-      expect_raises(IO::EOFError, "end of file reached") { iter.next! }
+      expect_raises(IO::EOFError, "End of file reached") { iter.next! }
     end
 
     it "its rewind method returns its parent's position to its former value" do
@@ -839,9 +839,9 @@ describe ByteBuffer do
       n.should be_a(Int8)
       bb.position.should eq(16) # => 16
 
-      expect_raises(IO::EOFError, "end of file reached") { bb.read }
+      expect_raises(IO::EOFError, "End of file reached") { bb.read }
       {% for type in %w(Int8 UInt8 Int16 UInt16 Int32 UInt32 Int64 UInt64 Float32 Float64) %}
-        expect_raises(IO::EOFError, "end of file reached") { bb.read {{type.id}} }
+        expect_raises(IO::EOFError, "End of file reached") { bb.read {{type.id}} }
       {% end %}
     end
 
@@ -908,9 +908,9 @@ describe ByteBuffer do
       expect_raises(IndexError) { bb.write -1, 1_i64 }
       expect_raises(Exception) { bb.reset }
       bb.flip
-      expect_raises(IO::EOFError, "end of file reached") { bb.read Int16 }
-      expect_raises(IO::EOFError, "end of file reached") { bb.read Int32 }
-      expect_raises(IO::EOFError, "end of file reached") { bb.read Int64 }
+      expect_raises(IO::EOFError, "End of file reached") { bb.read Int16 }
+      expect_raises(IO::EOFError, "End of file reached") { bb.read Int32 }
+      expect_raises(IO::EOFError, "End of file reached") { bb.read Int64 }
       bb.read(Int8).should eq(77)
     end
   end
@@ -1007,7 +1007,7 @@ describe ByteBuffer do
       sb.flip
       sb.read
       sb.read
-      expect_raises(IO::EOFError, "end of file reached") { sb.read }
+      expect_raises(IO::EOFError, "End of file reached") { sb.read }
     end
 
     it "can absolute write" do

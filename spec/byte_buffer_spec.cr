@@ -415,13 +415,13 @@ describe ByteBuffer do
 
     it "raises if the given index is greater than capacity" do
       bb = ByteBuffer.new(3)
-      expect_raises { bb.position = 4 }
+      expect_raises(ArgumentError) { bb.position = 4 }
     end
 
     it "raises if the given index is greater than limit" do
       bb = ByteBuffer.new(3)
       bb.limit = 2
-      expect_raises { bb.position = 3 }
+      expect_raises(ArgumentError) { bb.position = 3 }
     end
   end
 

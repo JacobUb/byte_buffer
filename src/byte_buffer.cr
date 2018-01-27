@@ -1,16 +1,9 @@
 require "./buffer"
 require "./other_buffers"
 
-class ByteBuffer
-  include IO
+class ByteBuffer < IO
   include Buffer(UInt8)
   include Enumerable(UInt8)
-
-  property order : IO::ByteFormat
-
-  @position : Int32 = 0
-  @mark : Int32 = -1
-  @order : IO::ByteFormat = IO::ByteFormat::SystemEndian
 
   # Creates a ByteBuffer with the given capacity.
   def initialize(capacity : Int)
@@ -31,7 +24,7 @@ class ByteBuffer
   # of bytes that were read.
   def read(slice : Slice(UInt8)) : Int32
     size = {slice.size, remaining}.min
-    slice.to_unsafe.copy_from @buffer + @position, size
+    slice.to_unsafe.copy_from(@buffer + @position, size)
     @position += size
     size
   end
@@ -39,7 +32,7 @@ class ByteBuffer
   # Relative read of a byte (UInt8). Raises IO::EOFError if there's no remaining
   # bytes to read.
   def read : UInt8
-    read UInt8
+    read(UInt8)
   end
 
   # Writes a Slice(UInt8). Raises IO::Error if there's no space left to write
@@ -48,7 +41,7 @@ class ByteBuffer
     size = slice.size
     return if size == 0
     raise IO::Error.new "buffer is full" if size > remaining
-    slice.to_unsafe.copy_to @buffer + @position, size
+    slice.to_unsafe.copy_to(@buffer + @position, size)
     @position += size
     nil
   end
@@ -70,12 +63,12 @@ class ByteBuffer
 
   # See IO#write_bytes.
   def write_bytes(object, format : IO::ByteFormat = @order)
-    object.to_io self, format
+    object.to_io(self, format)
   end
 
   # See IO#read_bytes.
   def read_bytes(type, format : IO::ByteFormat = @order)
-    type.from_io self, format
+    type.from_io(self, format)
   end
 
   # Creates a copy with the same `position`, `limit`, `mark` and `order`.
@@ -91,7 +84,7 @@ class ByteBuffer
   # They share the same underlying memory.
   def clone : self
     bb = ByteBuffer.new(@capacity)
-    bb.write to_slice
+    bb.write(to_slice)
     bb.position, bb.limit, bb.mark, bb.order = @position, @limit, @mark, @order
     bb
   end
@@ -101,7 +94,7 @@ class ByteBuffer
     # remaining bytes to read an entire `{{type.id}}`.
     def read(t : {{type.id}}.class) : {{type.id}}
       raise IO::EOFError.new if remaining < {{2 ** (i / 2)}}
-      value = absolute_read @position, {{type.id}}
+      value = absolute_read(@position, {{type.id}})
       @position += {{2 ** (i / 2)}}
       value
     end
@@ -110,24 +103,24 @@ class ByteBuffer
     # {{2 ** (i / 2)}}` is greater or equal than the capacity.
     def read(index : Int, t : {{type.id}}.class) : {{type.id}}
       raise IndexError.new if index + {{2 ** (i / 2)}} > @capacity
-      absolute_read index, {{type.id}}
+      absolute_read(index, {{type.id}})
     end
 
     # Relative write of `{{type.id}}`. Raises IO::Error if there's not enough
     # space for {{2 ** (i / 2)}} bytes.
     def write(value : {{type.id}})
-      @order.encode value, self
+      @order.encode(value, self)
     end
 
     # Relative write of `Enumerable({{type.id}})`. Raises IO::Error if there's
     # not enough space for for all its values.
     def write(values : Enumerable({{type.id}}))
       if values.size * {{2 ** (i / 2)}} > remaining
-        raise IO::Error.new "buffer is full"
+        raise IO::Error.new("buffer is full")
       end
       pos = @position
       values.each do |val|
-        absolute_write pos, val
+        absolute_write(pos, val)
         pos += {{2 ** (i / 2)}}
       end
       @position = pos
@@ -139,7 +132,7 @@ class ByteBuffer
       if index < 0 || index + {{2 ** (i / 2)}} > @capacity
         raise IndexError.new("#write(#{index}, #{value})")
       end
-      absolute_write index, value
+      absolute_write(index, value)
     end
   {% end %}
 
@@ -148,7 +141,7 @@ class ByteBuffer
     # remaining bytes to read an entire `{{type.id}}`.
     def read(t : {{type.id}}.class) : {{type.id}}
       raise IO::EOFError.new if remaining < {{(i + 1) * 4}}
-      value = absolute_read @position, {{type.id}}
+      value = absolute_read(@position, {{type.id}})
       @position += {{(i + 1) * 4}}
       value
     end
@@ -157,13 +150,13 @@ class ByteBuffer
     # {{(i + 1) * 4}}` is greater or equal than the capacity.
     def read(index : Int, t : {{type.id}}.class) : {{type.id}}
       raise IndexError.new if index + {{(i + 1) * 4}} > @capacity
-      absolute_read index, {{type.id}}
+      absolute_read(index, {{type.id}})
     end
 
     # Relative write of `{{type.id}}`. Raises IO::Error if there's not enough
     # space.
     def write(value : {{type.id}})
-      @order.encode value, self
+      @order.encode(value, self)
     end
 
     # Relative write of `Enumerable({{type.id}})`. Raises IO::Error if there's
@@ -174,7 +167,7 @@ class ByteBuffer
       end
       pos = @position
       values.each do |val|
-        absolute_write pos, val
+        absolute_write(pos, val)
         pos += {{(i + 1) * 4}}
       end
       @position = pos
@@ -184,7 +177,7 @@ class ByteBuffer
     # {{(i + 1) * 32}}` is greater or equal than the capacity.
     def write(index : Int, value : {{type.id}})
       raise IndexError.new if index + {{(i + 1) * 4}} > @capacity
-      absolute_write index, value
+      absolute_write(index, value)
     end
   {% end %}
 
@@ -247,7 +240,7 @@ class ByteBuffer
     # Reads a T value. The ByteBuffer will raise IO::EOFError if there's no more
     # T values to read.
     def next! : T
-      @bb.read T
+      @bb.read(T)
     end
 
     # Sets the position of the ByteBuffer this BufferIterator was created from

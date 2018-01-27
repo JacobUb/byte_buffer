@@ -1,4 +1,4 @@
-class ByteBuffer
+class ByteBuffer < IO
   # This module contains the methods shared by ByteBuffer and the other buffers.
   # Indices here are always in terms of the size of T.
   #
@@ -14,24 +14,20 @@ class ByteBuffer
   #
   # @order: the endianness of the buffer.
   module Buffer(T)
-    getter position : Int32
+    getter position = 0
     getter capacity : Int32
     getter limit : Int32
-    getter order : IO::ByteFormat
-    protected setter mark
+    property order = IO::ByteFormat::SystemEndian
+    protected setter mark = -1
+    getter mark
 
     @buffer : T*
-    @position : Int32
-    @limit : Int32
-    @mark : Int32
-    @capacity : Int32
-    @order : IO::ByteFormat
 
     # Reads a T value and advances the position. Raises EOFError if there's not
     # enough data remaining to read.
     def read : T
       raise IO::EOFError.new unless remaining?
-      value = absolute_read @position, T
+      value = absolute_read(@position, T)
       @position += 1
       value
     end
@@ -42,7 +38,7 @@ class ByteBuffer
       if index >= @capacity
         raise IndexError.new("#read(#{index}) (capacity: #{@capacity})")
       end
-      absolute_read index, T
+      absolute_read(index, T)
     end
 
     # Fills the slice from T values from the buffer, limited by the values that
@@ -50,10 +46,9 @@ class ByteBuffer
     def read(slice : Slice(T))
       size = {slice.size, remaining}.min
       if size > 0
-        size.times do |i|
-          slice.to_unsafe[i] = absolute_read @position + i, T
+        @position += size.times do |i|
+          slice.to_unsafe[i] = absolute_read(@position + i, T)
         end
-        @position += size
       end
       size
     end
@@ -62,7 +57,7 @@ class ByteBuffer
     # not enough room for the value.
     def write(value : T)
       raise IO::Error.new "buffer is full" unless remaining?
-      absolute_write @position, value
+      absolute_write(position, value)
       @position += 1
     end
 
@@ -72,7 +67,7 @@ class ByteBuffer
       raise IO::Error.new "buffer is full" if remaining < values.size
       pos, stop = @position, @position + remaining
       values.each do |val|
-        absolute_write pos, val
+        absolute_write(pos, val)
         pos += 1
       end
       @position = pos
@@ -83,10 +78,9 @@ class ByteBuffer
     def write(slice : Slice(T))
       size = slice.size
       raise IO::Error.new "buffer is full" if remaining < size
-      size.times do |i|
-        absolute_write @position + i, slice.unsafe_at i
+      @position += size.times do |i|
+        absolute_write(@position + i, slice.unsafe_at i)
       end
-      @position += size
     end
 
     # Writes the contents of the array into the buffer. Raises IO::Error if
@@ -94,17 +88,16 @@ class ByteBuffer
     def write(array : Array(T))
       size = array.size
       raise IO::Error.new "buffer is full" if remaining < size
-      size.times do |i|
-        absolute_write @position + i, array.unsafe_at i
+      @position += size.times do |i|
+        absolute_write(@position + i, array.unsafe_at i)
       end
-      @position += size
     end
 
     # Writes a T value at the given index. Raises IndexError if the index is out
     # of bounds.
     def write(index : Int, value : T)
       raise IndexError.new if index >= @capacity
-      absolute_write index, value
+      absolute_write(index, value)
       self
     end
 
@@ -136,6 +129,7 @@ class ByteBuffer
       if index < 0 || index >= @capacity
         raise IndexError.new("#[#{index}] (capacity: #{@capacity}")
       end
+
       @buffer[index]
     end
 
@@ -145,6 +139,7 @@ class ByteBuffer
       if index < 0 || index + sizeof(T) > @capacity
         raise IndexError.new("#[#{index}] = #{value} (capacity: #{@capacity})")
       end
+
       @buffer[index] = value
     end
 
@@ -177,6 +172,7 @@ class ByteBuffer
     # called. Raises if the mark wasn't set.
     def reset : self
       raise "invalid mark" if @mark < 0
+
       @position = @mark
       self
     end
@@ -225,8 +221,10 @@ class ByteBuffer
       elsif index < 0
         raise ArgumentError.new("position must be greater than zero")
       end
+
       @position = index.to_i
       @mark = -1 if @mark > index
+
       index
     end
 
@@ -238,22 +236,19 @@ class ByteBuffer
       elsif index < 0
         raise ArgumentError.new("limit must be greater than zero")
       end
+
       @limit = index.to_i
       @position = @limit if @position > @limit
       @mark = -1 if @mark > @limit
+
       index
     end
 
     # Sets the mark to the current position. Later, the position can be returned
     # to the former position with `reset`.
-    def mark : self
+    def mark! : self
       @mark = @position
       self
-    end
-
-    # Returns the index of the mark or nil if it's undefined.
-    def mark? : Int32?
-      @mark if @mark > -1
     end
 
     # Removes the mark.
@@ -282,7 +277,7 @@ class ByteBuffer
     # Sets `size` elements of the buffer to 0, starting from `offset`.
     def zero(offset : Int, size : Int) : self
       if offset + size > @capacity
-        raise IndexError.new "#zero(#{offset}, #{size}) (capacity: #{capacity})"
+        raise IndexError.new("#zero(#{offset}, #{size}) (capacity: #{capacity})")
       end
       (@buffer + offset).clear(size)
       self
@@ -292,62 +287,40 @@ class ByteBuffer
     def zero(range : Range(Int, Int)) : self
       size = (range.excludes_end? ? range.end - 1 : range.end) - range.begin + 1
       if range.begin + size > @capacity
-        raise IndexError.new "#zero(#{range}) (capacity: #{capacity})"
+        raise IndexError.new("#zero(#{range}) (capacity: #{capacity})")
       end
       (@buffer + range.begin).clear(size)
       self
     end
 
     # Creates a copy with the same `position`, `limit`, `mark` and `order`.
-    # The copy contains the same data as the original and any changes to it will
-    # be reflected on the original.
+    # The copy contains the same data as the original but doesn't share its
+    # memory.
     def dup : self
       bb = self.class.new(to_slice)
-      bb.position, bb.limit, bb.mark, bb.order = @position, @limit, @mark, @order
+      bb.position, bb.limit, bb.mark = @position, @limit, @mark
       bb
     end
 
     # Creates a copy with the same `position`, `limit`, `mark` and `order`.
-    # The copy contains the same data as the original but changes to it won't
-    # be reflected on the original.
+    # They share the same underlying memory.
     def clone : self
       bb = self.class.new(@capacity)
-      bb.write to_slice
-      bb.position, bb.limit, bb.mark, bb.order = @position, @limit, @mark, @order
+      bb.write(to_slice)
+      bb.position, bb.limit, bb.mark = @position, @limit, @mark
       bb
     end
 
     # Reads a value of type t at the given index. Does not do any bounds check.
-    private def absolute_read(index : Int, t)
+    private def absolute_read(index, t)
       buf = (@buffer + index).as(UInt8*)
-      @order.decode t, PointerIO.new(pointerof(buf))
+      @order.decode(t, buf.to_slice(@capacity))
     end
 
     # Writes a value at the given index. Does not do any bounds check.
-    private def absolute_write(index : Int, value)
+    private def absolute_write(index, value)
       buf = (@buffer + index).as(UInt8*)
-      @order.encode value, PointerIO.new(pointerof(buf))
-    end
-
-    private struct PointerIO
-      include IO
-
-      def initialize(@pointer : UInt8**)
-      end
-
-      def read(slice : Slice(UInt8))
-        count = slice.size
-        slice.copy_from(@pointer.value, count)
-        @pointer.value += count
-        count
-      end
-
-      def write(slice : Slice(UInt8))
-        count = slice.size
-        slice.copy_to(@pointer.value, count)
-        @pointer.value += count
-        nil
-      end
+      @order.encode(value, buf.to_slice(@capacity))
     end
   end
 end

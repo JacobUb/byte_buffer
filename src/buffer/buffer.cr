@@ -319,13 +319,13 @@ class ByteBuffer < IO
     # Reads a value of type t at the given index. Does not do any bounds check.
     private def absolute_read(index, t)
       buf = (@buffer + index).as(UInt8*)
-      @order.decode(t, buf.to_slice(@capacity))
+      @order.decode(t, buf.to_slice(Int32::MAX))
     end
 
     # Writes a value at the given index. Does not do any bounds check.
     private def absolute_write(index, value)
       buf = (@buffer + index).as(UInt8*)
-      @order.encode(value, buf.to_slice(@capacity))
+      @order.encode(value, buf.to_slice(Int32::MAX))
     end
   end
 end

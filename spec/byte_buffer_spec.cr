@@ -26,7 +26,7 @@ describe ByteBuffer do
 
     it "its mark starts as undefined" do
       bb = ByteBuffer.new(5)
-      bb.@mark.should eq(-1)
+      bb.mark.should eq(-1)
     end
 
     it "a new instance has a limit equal to its capacity" do
@@ -429,8 +429,8 @@ describe ByteBuffer do
     it "sets the mark to the current position" do
       bb = ByteBuffer.new(10)
       bb.position = 5
-      bb.mark
-      bb.@mark.should eq(5)
+      bb.mark!
+      bb.mark.should eq(5)
     end
   end
 
@@ -440,11 +440,11 @@ describe ByteBuffer do
       bb.write 1234567890
       bb.flip
       bb.position = 2
-      bb.mark
+      bb.mark!
       bb.clear
       bb.position.should eq(0)
       bb.limit.should eq(bb.capacity)
-      bb.@mark.should eq(-1)
+      bb.mark.should eq(-1)
     end
   end
 
@@ -467,9 +467,9 @@ describe ByteBuffer do
     it "removes the mark" do
       bb = ByteBuffer.new(10)
       bb.position = 5
-      bb.mark
+      bb.mark!
       bb.flip
-      bb.@mark.should eq(-1)
+      bb.mark.should eq(-1)
     end
 
     it "allows reading from a previous write" do
@@ -554,9 +554,9 @@ describe ByteBuffer do
     it "removes the mark" do
       bb = ByteBuffer.new(5)
       bb.position = 3
-      bb.mark
+      bb.mark!
       bb.rewind
-      bb.@mark.should eq(-1)
+      bb.mark.should eq(-1)
     end
   end
 
@@ -564,7 +564,7 @@ describe ByteBuffer do
     it "sets the position to the mark" do
       bb = ByteBuffer.new(5)
       bb.position = 3
-      bb.mark
+      bb.mark!
       bb.position = 5
       bb.reset
       bb.position.should eq(3)

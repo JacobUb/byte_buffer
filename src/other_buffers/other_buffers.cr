@@ -3,9 +3,6 @@ class ByteBuffer
     class {{type.id}}Buffer
       include Buffer({{type.id}})
 
-      @position : Int32 = 0
-      @mark : Int32 = -1
-
       def initialize(capacity : Int)
         raise ArgumentError.new("negative capacity") if capacity < 0
         @buffer = Pointer({{type.id}}).malloc(capacity)
@@ -31,7 +28,7 @@ class ByteBuffer
     # will be reflected on its parent. `position`, `limit` and `mark` are
     # independent.
     def as_{{type.downcase.id}}_buffer : {{type.id}}Buffer
-      {{type.id}}Buffer.new self
+      {{type.id}}Buffer.new(self)
     end
   {% end %}
 end

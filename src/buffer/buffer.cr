@@ -17,7 +17,7 @@ class ByteBuffer < IO
     getter position = 0
     getter capacity : Int32
     getter limit : Int32
-    property order = IO::ByteFormat::SystemEndian
+    property order : IO::ByteFormat = IO::ByteFormat::SystemEndian
     protected setter mark = -1
     getter mark
 
